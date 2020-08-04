@@ -1,4 +1,5 @@
 // SSELECTING AND DECLARING ITEMS 
+const hex=['0','1','2','3','4','5','6','7','8','9',"A","B","C","D","E","F"];
 var keyPressed = false;
 var canvas=document.getElementById("canvas");
 var ctx=canvas.getContext("2d");
@@ -9,7 +10,13 @@ var map = {
     83:false,//'s'
     65:false,//'a'
     68:false,//'d'
+    37:false,//left 
+    38:false,//up
+    39:false,//right
+    40:false//down 
 }
+
+var colorPlate = ['white','green','blue','magenta',]
 var velocityFlag=0;
 
 var colorPlate = [
@@ -22,9 +29,11 @@ document.body.onkeyup=KeyUp;
 //Functions 
 
 function init(){
+    
     canvas.width=1600;
     canvas.height=800;
-    c = new Car(200,200,'green');
+    color=getRandomColor();
+    c = new Car(200,200,color);
     world = new World();
     setInterval(nextAnimationFrame,10);
 }
@@ -44,31 +53,31 @@ function KeyUp(e){
 }
 
 function Move(){
-     if(map[87]&&map[65]){ // w a
+     if((map[87]&&map[65])||(map[38]&&map[37])){ // w a || up left 
         c.moveCar(1,true);
         c.rotateCar(-1);
-    } else if(map[87]&&map[68]){ // w d
+    } else if(map[87]&&map[68]||(map[38]&&map[39])){ // w d  || up right 
         c.moveCar(1,true);
         c.rotateCar(1);
-    } else if(map[83]&&map[65]){ // s a
+    } else if(map[83]&&map[65]||(map[40]&&map[37])){ // s a || down left 
         c.moveCar(-1,true);
         c.rotateCar(-1);
-    } else if(map[83]&&map[68]){ // s d
+    } else if(map[83]&&map[68]||(map[38]&&map[39])){ // s d  || down right 
         c.moveCar(-1,true);
         c.rotateCar(1);
-    }else if(c.velocity>0&&map[65]){
+    }else if(c.velocity>0&&map[65]||(c.velocity>0&&map[37])){  // speed and left 
         c.moveCar(1,false);
         c.rotateCar(-1)
-    }else if(c.velocity>0&&map[68]){
+    }else if(c.velocity>0&&map[68]||(c.velocity>0&&map[39])){  // speed right 
         c.moveCar(1,false);
         c.rotateCar(1)
-    } else if(map[83]){ //s
+    } else if(map[83]||map[40]){ //s  || down
         c.moveCar(-1,true);
-    } else if(map[65]){ //a
+    } else if(map[65]||map[37]){ //a  || lef t 
         c.rotateCar(-1);
-    } else if(map[68]){ //d
+    } else if(map[68]||map[39]){ //d  || right 
         c.rotateCar(1);
-    } else if(map[87]){ //w   
+    } else if(map[87]||map[38]){ //w  || up 
         c.moveCar(1,true);
     }else {
         c.moveCar(1,false);
@@ -100,6 +109,14 @@ function isEmpty(obj) {  // Checking if object is empty
             return false;
     }
     return true;
+}
+
+function getRandomColor(){
+    let hexColor='#';
+    for(let i =0;i<6;i++){
+        hexColor += hex[Math.floor(Math.random()*hex.length)];
+    }
+    return hexColor;
 }
  //==================
 // Our car 
@@ -143,11 +160,9 @@ class Car {
             this.velocity = this.velocity - 0.01;
             velocityFlag=velocityFlag-0.01;
         } else if(this.velocity <0.1){
-            console.log('4');
             velocityFlag=0;
             this.velocity=0;
         }
-        console.log('v='+this.velocity);
         // If some problems show up 
         if(this.velocity>4.5){
             this.velocity=0;
