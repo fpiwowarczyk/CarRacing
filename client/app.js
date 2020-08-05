@@ -170,6 +170,27 @@ class Car {
             this.posX=200;
             this.posY=200;
         }
+        console.log(this.x);
+        if(this.posX>canvas.width){
+            this.velocity=0;
+            velocityFlag=0;
+            this.posX=this.posX-100;
+        }
+        if(this.posX<0){
+            this.velocity=0;
+            velocityFlag=0;
+            this.posX=this.posX+100;
+        }
+        if(this.posY>canvas.height){
+            this.velocity=0;
+            velocityFlag=0;
+            this.posY=this.posY-100;
+        }
+        if(this.posY<0){
+            this.velocity=0;
+            velocityFlag=0;
+            this.posY=this.posY+100;
+        }
         this.posX=this.posX+Math.pow(direction,2)*this.velocity*Math.cos(this.angle*Math.PI/180);
         this.posY=this.posY+Math.pow(direction,2)*this.velocity*Math.sin(this.angle*Math.PI/180);
         this.rotateCar(0);
@@ -210,20 +231,48 @@ class World{
         this.rangeY=canvas.height;
         this.drawMap();    
     }
-
     drawMap(){
         ctx.fillStyle='rgba(50,200,50,0.6)';
         ctx.fillRect(this.posX,this.posY,canvas.width,canvas.height)
-        this.drawTree();
+        this.drawRoad();
+        for(let i =0;i<10;i++){
+            this.drawTree(canvas.width-50,80*i);
+        }
+        for(let i =0;i<20;i++){
+            this.drawTree(100*i,0);
+        }
+    }
+    drawTree(x,y){
+
+        ctx.beginPath();
+        ctx.fillStyle='	rgba(139,69,19,0.9)'
+        ctx.fillRect(x+10,y+40,20,40);
+        ctx.fillStyle='rgba(0,200,0,1)';
+        ctx.arc(x,y,20,0,Math.PI + (Math.PI * 2) / 2,0);
+        ctx.arc(x+30,y,20,0,Math.PI + (Math.PI * 2) / 2,0);
+        ctx.arc(x,y+30,20,0,Math.PI + (Math.PI * 2) / 2,0);
+        ctx.arc(x+30,y+30,20,0,Math.PI + (Math.PI * 2) / 2,0);
+        ctx.arc(x+50,y+30,20,0,Math.PI + (Math.PI * 2) / 2,0);
+        ctx.arc(x+50,y+10,20,0,Math.PI + (Math.PI * 2) / 2,0);
+        ctx.arc(x+60,y+20,20,0,Math.PI + (Math.PI * 2) / 2,0);
+        ctx.arc(x+30,y+10,20,0,Math.PI + (Math.PI * 2) / 2,0);
+        ctx.arc(x+40,y+10,20,0,Math.PI + (Math.PI * 2) / 2,0);
+        ctx.arc(x-20,y+20,20,0,Math.PI + (Math.PI * 2) / 2,0);
+        ctx.fill();
+ 
     }
 
-    drawTree(){
-        for(let i=1; i<20;i++){
+    drawRoad(){
+        for(let i=1; i<29;i++){
             ctx.fillStyle='rgba(100,0,100,0.5)';
             ctx.fillRect(40+i*50,100,20,20);
-            ctx.fillRect(40+20*50,50+i*50,20,20);
+
             ctx.fillRect(40+i*50,50+14*50,20,20);
-            ctx.fillRect(40,50+i*50,20,20);
+
+        }
+        for(let i =1;i<20;i++){
+        ctx.fillRect(40+29*50,50+i*50,20,20);
+        ctx.fillRect(40,50+i*50,20,20);
         }
     }
 }
