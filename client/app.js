@@ -16,7 +16,6 @@ var map = {
     40:false//down 
 }
 
-var colorPlate = ['white','green','blue','magenta',]
 var velocityFlag=0;
 
 var colorPlate = [
@@ -26,6 +25,12 @@ var colorPlate = [
 window.addEventListener("DOMContentLoaded",init);
 document.body.onkeydown=KeyDown;
 document.body.onkeyup=KeyUp;
+window.addEventListener('click',function(e){
+    var x = e.clientX-80;
+    var y = e.clientY-80;
+    console.log('x:'+x);
+    console.log('y:'+y);
+});
 //Functions 
 
 function init(){
@@ -163,33 +168,32 @@ class Car {
             velocityFlag=0;
             this.velocity=0;
         }
-        // If some problems show up 
+        //If some problems show up || any pushing w cheat 
         if(this.velocity>4.5){
             this.velocity=0;
             velocityFlag=0;
             this.posX=200;
             this.posY=200;
         }
-        console.log(this.x);
         if(this.posX>canvas.width){
             this.velocity=0;
             velocityFlag=0;
-            this.posX=this.posX-100;
+            this.posX=this.posX-50;
         }
         if(this.posX<0){
             this.velocity=0;
             velocityFlag=0;
-            this.posX=this.posX+100;
+            this.posX=this.posX+50;
         }
         if(this.posY>canvas.height){
             this.velocity=0;
             velocityFlag=0;
-            this.posY=this.posY-100;
+            this.posY=this.posY-50;
         }
         if(this.posY<0){
             this.velocity=0;
             velocityFlag=0;
-            this.posY=this.posY+100;
+            this.posY=this.posY+50;
         }
         this.posX=this.posX+Math.pow(direction,2)*this.velocity*Math.cos(this.angle*Math.PI/180);
         this.posY=this.posY+Math.pow(direction,2)*this.velocity*Math.sin(this.angle*Math.PI/180);
@@ -241,6 +245,7 @@ class World{
         for(let i =0;i<20;i++){
             this.drawTree(100*i,0);
         }
+
     }
     drawTree(x,y){
 
@@ -263,17 +268,35 @@ class World{
     }
 
     drawRoad(){
-        for(let i=1; i<29;i++){
-            ctx.fillStyle='rgba(100,0,100,0.5)';
+        ctx.fillStyle='rgba(100,0,100,0.5)';
+        for(let i=1; i<29;i++){  // Horizontal Border
             ctx.fillRect(40+i*50,100,20,20);
-
             ctx.fillRect(40+i*50,50+14*50,20,20);
+        }
+        for(let i =1;i<20;i++){ // Vertical Border  
+            ctx.fillRect(40+29*50,50+i*50,20,20);
+            ctx.fillRect(40,50+i*50,20,20);
+        }
+        this.roundedRect(ctx,100,150,1350,550,40);
+        ctx.fill();
+        this.roundedRect(ctx,200,250,1150,350,40);
+        ctx.fillStyle='rgba(50,200,50,0.6)'
+        ctx.fill();
 
-        }
-        for(let i =1;i<20;i++){
-        ctx.fillRect(40+29*50,50+i*50,20,20);
-        ctx.fillRect(40,50+i*50,20,20);
-        }
+    }
+
+    roundedRect(ctx,x,y,width,height,radius){
+        ctx.beginPath();
+        ctx.moveTo(x, y + radius);
+        ctx.lineTo(x, y + height - radius);
+        ctx.arcTo(x, y + height, x + radius, y + height, radius);
+        ctx.lineTo(x + width - radius, y + height);
+        ctx.arcTo(x + width, y + height, x + width, y + height-radius, radius);
+        ctx.lineTo(x + width, y + radius);
+        ctx.arcTo(x + width, y, x + width - radius, y, radius);
+        ctx.lineTo(x + radius, y);
+        ctx.arcTo(x, y, x, y + radius, radius);
+        ctx.stroke();
     }
 }
 
