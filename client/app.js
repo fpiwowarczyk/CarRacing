@@ -4,7 +4,6 @@ var keyPressed = false;
 var canvas=document.getElementById("canvas");
 var ctx=canvas.getContext("2d");
 var img = new Image();
-img.src = 'tree.png';
 var map = {
     87:false,//'w'
     83:false,//'s'
@@ -15,22 +14,11 @@ var map = {
     39:false,//right
     40:false//down 
 }
-
 var velocityFlag=0;
-
-var colorPlate = [
-
-]
 //==========EVENT LISTENERS
 window.addEventListener("DOMContentLoaded",init);
 document.body.onkeydown=KeyDown;
 document.body.onkeyup=KeyUp;
-window.addEventListener('click',function(e){
-    var x = e.clientX-80;
-    var y = e.clientY-80;
-    console.log('x:'+x);
-    console.log('y:'+y);
-});
 //Functions 
 
 function init(){
@@ -38,8 +26,26 @@ function init(){
     canvas.width=1600;
     canvas.height=800;
     color=getRandomColor();
+    
     c = new Car(200,200,color);
+    
     world = new World();
+    gates = [];
+    for(let i =0;i<10;i++){
+        gates.push(new Gate(400+100*i,150,i,'vert'));
+    }
+    for(let i =10;i<14;i++){
+        gates.push(new Gate(1350,270+100*(i-10),i,'hor'));
+    }
+    for(let i =14;i<26;i++){
+        gates.push(new Gate(1320-100*(i-14),600,i,'vert'))
+    }
+    for(let i=26;i<30;i++){
+        gates.push(new Gate(100,570-100*(i-26),i,'hor'));
+    }
+    for(let i=30;i<32;i++){
+        gates.push(new Gate(230+100*(i-30),150,i,'vert'));
+    }
     setInterval(nextAnimationFrame,10);
 }
 
@@ -96,6 +102,9 @@ function nextAnimationFrame(){
     
     ctx.clearRect(0,0,canvas.width,canvas.height);
     world.drawMap();
+    gates.forEach(function(g) {
+        g.draw();
+    });
     if(!map[87]&&!map[83])
     {
         c.rotateCar(0);
@@ -103,7 +112,20 @@ function nextAnimationFrame(){
     }else {
         Move();
     }
+    dist=0;
+    if(gates[c.checkPoint].orientation==='hor')
+    {
+        dist=countDist(c.posX,c.posY,gates[c.checkPoint].posX+50,gates[c.checkPoint].posY+2.5);
+        
+    } else {
+        dist=countDist(c.posX,c.posY,gates[c.checkPoint].posX+2.5,gates[c.checkPoint].posY+50);
+    }
+    if(dist<80){
+        c.changeCheckPoint();
+    }
+    console.log(c.checkPoint);
     
+
 }
 //===================
 
@@ -123,6 +145,11 @@ function getRandomColor(){
     }
     return hexColor;
 }
+
+function countDist(p1x,p1y,p2x,p2y){
+    dist=Math.sqrt((p1x-p2x)*(p1x-p2x)+(p1y-p2y)*(p1y-p2y));
+    return dist;
+}
  //==================
 // Our car 
 class Car {
@@ -134,8 +161,8 @@ class Car {
         this.color=color;
         this.velocity=0;
         this.rotateCar(0);
+        this.checkPoint=0;
     }
-
     drawCar(){ // Making a car from rectangles 
         //Draw body
         this.drawRectangle(this.posX,this.posY,40,20,this.color);
@@ -224,6 +251,9 @@ class Car {
         ctx.moveTo(-x,-y);
         ctx.stroke();
     }
+    changeCheckPoint(){
+        this.checkPoint=this.checkPoint+1;
+    }
 }
 
 /// How to put images into canvas ?
@@ -240,12 +270,30 @@ class World{
         ctx.fillRect(this.posX,this.posY,canvas.width,canvas.height)
         this.drawRoad();
         for(let i =0;i<10;i++){
-            this.drawTree(canvas.width-50,80*i);
+            this.drawTree(canvas.width-50+Math.floor(Math.random()*20),80*i);
         }
         for(let i =0;i<20;i++){
-            this.drawTree(100*i,0);
+            this.drawTree(100*i,0+Math.floor(Math.random()*20));
         }
 
+        this.drawStart();
+    }
+    
+    drawStart(){
+        
+        for(let i =0;i<5;i+=2){
+            ctx.fillStyle='black';
+            ctx.fillRect(400,230-20*i,20,20);
+            ctx.fillStyle='white'
+            ctx.fillRect(420,230-20*i,20,20)
+        }
+        for(let i =1;i<5;i+=2){
+            ctx.fillStyle='black';
+            ctx.fillRect(420,230-20*i,20,20);
+            ctx.fillStyle='white'
+            ctx.fillRect(400,230-20*i,20,20);
+        }
+        
     }
     drawTree(x,y){
 
@@ -298,5 +346,30 @@ class World{
         ctx.arcTo(x, y, x, y + radius, radius);
         ctx.stroke();
     }
+
+}
+
+class Gate {
+    constructor(posX,posY,number,orientation){
+        this.posX=posX;
+        this.posY=posY;
+        this.number=number;
+        this.visibility  = true;
+        this.orientation=orientation;
+        this.draw();
+    }
+    draw(){
+        if(this.visibility===true){
+            if(this.orientation==='vert'){
+                ctx.fillStyle='blue';
+                ctx.fillRect(this.posX,this.posY,5,100);
+            }
+            if(this.orientation==='hor'){
+                ctx.fillStyle='blue';
+                ctx.fillRect(this.posX,this.posY,100,5);   
+            }
+        }
+    }
+
 }
 
