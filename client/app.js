@@ -1,9 +1,13 @@
-// SSELECTING AND DECLARING ITEMS 
-const hex=['0','1','2','3','4','5','6','7','8','9',"A","B","C","D","E","F"];
-var keyPressed = false;
+//WEBSOCKET STUFF
+var wsUri = "ws://localhost:8888/ws";
+
+// SELECTING AND DECLARING ITEMS 
+
 var canvas=document.getElementById("canvas");
 var ctx=canvas.getContext("2d");
-var img = new Image();
+
+
+const hex=['0','1','2','3','4','5','6','7','8','9',"A","B","C","D","E","F"];
 var map = {
     87:false,//'w'
     83:false,//'s'
@@ -14,21 +18,22 @@ var map = {
     39:false,//right
     40:false//down 
 }
+var keyPressed = false;
 var velocityFlag=0;
 //==========EVENT LISTENERS
-window.addEventListener("DOMContentLoaded",init);
+window.addEventListener('DOMContentLoaded',init);
 document.body.onkeydown=KeyDown;
 document.body.onkeyup=KeyUp;
 //Functions 
 
 function init(){
-    
+    game();
     canvas.width=1600;
     canvas.height=800;
     color=getRandomColor();
     
-    c = new Car(200,200,color);
-    
+    c = new Car(300,210,color);
+
     world = new World();
     gates = [];
     for(let i =0;i<10;i++){
@@ -47,6 +52,7 @@ function init(){
         gates.push(new Gate(230+100*(i-30),150,i,'vert'));
     }
     setInterval(nextAnimationFrame,10);
+        
 }
 
 
@@ -97,7 +103,37 @@ function Move(){
 
  // ================= 
 
- // ===== GAME LOOP
+ // ===== WEBSOCKET
+
+function game(){
+    websocket = new WebSocket(wsUri);
+    websocket.binaryType="arraybuffer";
+    websocket.onopen = function(e) { onOpen(e) };
+    websocket.onclose = function(e) { onClose(e) };
+    websocket.onmessage = function(e) { onMessage(e) };
+    websocket.onerror = function(e) { onError(e) };
+}
+
+function onOpen(e){
+    console.log("CONNECTED TO THE SERVER");
+}
+
+function onClose(e){
+    console.log("CONNECTION CLOSED");
+}
+
+function onMessage(e){
+    view = new Int16Array(e.data);
+    c.lap=view[0];
+    c.checkPoint=view[1];
+    console.log(view);
+}
+
+function onError(e){
+    console.log("ERROR:"+e.data);
+}
+
+// ===== GAMELOOP 
 function nextAnimationFrame(){
     
     ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -123,11 +159,21 @@ function nextAnimationFrame(){
     if(dist<80){
         c.changeCheckPoint();
     }
-    console.log(c.checkPoint);
-    
+    if(websocket.readyState===1){
+        sendGameState();
+    }
 
 }
-//===================
+
+function sendGameState(){ // MEssage struct gates 
+    var buffer = new ArrayBuffer(8);
+    var bufferView = new DataView(buffer);
+    bufferView.setInt16(1,c.checkPoint);
+    //console.log(gates.length);
+    bufferView.setInt16(3,gates.length);
+    //console.log(buffer);
+    websocket.send(buffer);
+}
 
 //=========== UTILS
 function isEmpty(obj) {  // Checking if object is empty 
@@ -150,8 +196,8 @@ function countDist(p1x,p1y,p2x,p2y){
     dist=Math.sqrt((p1x-p2x)*(p1x-p2x)+(p1y-p2y)*(p1y-p2y));
     return dist;
 }
- //==================
-// Our car 
+ //======CLASSES 
+
 class Car {
     
     constructor (posX,posY,color){
@@ -162,6 +208,7 @@ class Car {
         this.velocity=0;
         this.rotateCar(0);
         this.checkPoint=0;
+        this.lap=0;
     }
     drawCar(){ // Making a car from rectangles 
         //Draw body
@@ -251,12 +298,16 @@ class Car {
         ctx.moveTo(-x,-y);
         ctx.stroke();
     }
-    changeCheckPoint(){
-        this.checkPoint=this.checkPoint+1;
+    // changeCheckPoint(){
+    //     if(this.checkPoint>=gates.length-1){
+    //         this.checkPoint=0;
+    //     } else {
+    //         this.checkPoint=this.checkPoint+1;
+    //     }
+        
     }
 }
 
-/// How to put images into canvas ?
 class World{
     constructor (){
         this.posX =0;
@@ -270,12 +321,12 @@ class World{
         ctx.fillRect(this.posX,this.posY,canvas.width,canvas.height)
         this.drawRoad();
         for(let i =0;i<10;i++){
-            this.drawTree(canvas.width-50+Math.floor(Math.random()*20),80*i);
+            this.drawTree(canvas.width-50,80*i);
         }
         for(let i =0;i<20;i++){
-            this.drawTree(100*i,0+Math.floor(Math.random()*20));
+            this.drawTree(100*i,0);
         }
-
+        this.drawLap();
         this.drawStart();
     }
     
@@ -294,6 +345,12 @@ class World{
             ctx.fillRect(400,230-20*i,20,20);
         }
         
+    }
+
+    drawLap(){
+        ctx.fillStyle="rgba(200,50,50,0.9)";
+        ctx.font = "200px Arial";
+        ctx.fillText("Lap:"+c.lap, 250, 450);
     }
     drawTree(x,y){
 
@@ -354,7 +411,7 @@ class Gate {
         this.posX=posX;
         this.posY=posY;
         this.number=number;
-        this.visibility  = true;
+        this.visibility  = false;
         this.orientation=orientation;
         this.draw();
     }
