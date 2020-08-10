@@ -25,10 +25,10 @@ class GameHandler(tornado.websocket.WebSocketHandler):
     def on_message(self,message):
         global Lap,lastGate
         if isinstance(message,bytes):
-            message=struct.unpack('hhhh',message)
+            message=struct.unpack('hhhhhhhh',message)
             print(message)
             gate=message[0]+message[1]
-            gates = message[2]
+            gates = message[2]+message[3]
             if(gate!=lastGate):
                 lastGate= gate
                 if(gate>=gates-1):

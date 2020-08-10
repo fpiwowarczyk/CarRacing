@@ -166,10 +166,13 @@ function nextAnimationFrame(){
 }
 
 function sendGameState(){ // MEssage struct gates 
-    var buffer = new ArrayBuffer(8);
+    var buffer = new ArrayBuffer(16);
     var bufferView = new DataView(buffer);
     bufferView.setInt16(1,c.checkPoint);
-    bufferView.setInt16(3,gates.length);
+    bufferView.setInt16(5,gates.length);
+    bufferView.setInt16(9,c.posX);
+    bufferView.setInt16(13,c.posY);
+    console.log(buffer);
     websocket.send(buffer);
 }
 
