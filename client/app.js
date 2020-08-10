@@ -32,7 +32,7 @@ function init(){
     canvas.height=800;
     color=getRandomColor();
     
-    c = new Car(300,210,color);
+    c = new Car(200,210,color);
 
     world = new World();
     gates = [];
@@ -169,9 +169,7 @@ function sendGameState(){ // MEssage struct gates
     var buffer = new ArrayBuffer(8);
     var bufferView = new DataView(buffer);
     bufferView.setInt16(1,c.checkPoint);
-    //console.log(gates.length);
     bufferView.setInt16(3,gates.length);
-    //console.log(buffer);
     websocket.send(buffer);
 }
 
@@ -196,11 +194,17 @@ function countDist(p1x,p1y,p2x,p2y){
     dist=Math.sqrt((p1x-p2x)*(p1x-p2x)+(p1y-p2y)*(p1y-p2y));
     return dist;
 }
+
+function changeName(){
+    name=document.getElementById('frml').submit();
+    console.log(name);
+}
  //======CLASSES 
 
 class Car {
     
     constructor (posX,posY,color){
+        this.nick="Player";
         this.angle=0;
         this.posX=posX;
         this.posY=posY;
@@ -211,6 +215,10 @@ class Car {
         this.lap=0;
     }
     drawCar(){ // Making a car from rectangles 
+        // Draw nick 
+        ctx.fillStyle=this.color;
+        ctx.font = "15px Arial";
+        ctx.fillText(this.nick, this.posX-20, this.posY-20);
         //Draw body
         this.drawRectangle(this.posX,this.posY,40,20,this.color);
 
@@ -298,12 +306,8 @@ class Car {
         ctx.moveTo(-x,-y);
         ctx.stroke();
     }
-    // changeCheckPoint(){
-    //     if(this.checkPoint>=gates.length-1){
-    //         this.checkPoint=0;
-    //     } else {
-    //         this.checkPoint=this.checkPoint+1;
-    //     }
+    changeCheckPoint(){
+            this.checkPoint=this.checkPoint+1;
         
     }
 }
@@ -334,15 +338,15 @@ class World{
         
         for(let i =0;i<5;i+=2){
             ctx.fillStyle='black';
-            ctx.fillRect(400,230-20*i,20,20);
+            ctx.fillRect(200,230-20*i,20,20);
             ctx.fillStyle='white'
-            ctx.fillRect(420,230-20*i,20,20)
+            ctx.fillRect(220,230-20*i,20,20)
         }
         for(let i =1;i<5;i+=2){
             ctx.fillStyle='black';
-            ctx.fillRect(420,230-20*i,20,20);
+            ctx.fillRect(220,230-20*i,20,20);
             ctx.fillStyle='white'
-            ctx.fillRect(400,230-20*i,20,20);
+            ctx.fillRect(200,230-20*i,20,20);
         }
         
     }
@@ -411,7 +415,7 @@ class Gate {
         this.posX=posX;
         this.posY=posY;
         this.number=number;
-        this.visibility  = false;
+        this.visibility  = true;
         this.orientation=orientation;
         this.draw();
     }
