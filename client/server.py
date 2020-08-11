@@ -9,6 +9,7 @@ import time
 Players={}
 Lap=0
 lastGate=0
+nick=''
 # Zliczanie kółek pos tronie serwera 
 #  Kontrola poruszania się auta 
 # Dodac gracza jako klase, a potem zrobic z tego array 
@@ -23,12 +24,21 @@ class GameHandler(tornado.websocket.WebSocketHandler):
     def onClose(self):
         print("Connection closed")
     def on_message(self,message):
-        global Lap,lastGate
+        global Lap,lastGate,nick
         if isinstance(message,bytes):
-            message=struct.unpack('hhhhhhhh',message)
-            print(message)
+            message=struct.unpack('hh'*36,message)
+            #print(message)
+            #Position of player 
             gate=message[0]+message[1]
             gates = message[2]+message[3]
+            posX= message[4]+message[5]
+            posY=message[6]+message[7]
+            #Nick name of Player 
+            for n in message[8:]:
+                if(n!= 0):
+                    nick=nick+chr(n)
+            print(nick)
+            nick=''
             if(gate!=lastGate):
                 lastGate= gate
                 if(gate>=gates-1):

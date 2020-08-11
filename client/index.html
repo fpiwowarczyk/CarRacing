@@ -13,10 +13,10 @@
         <div >
             <canvas id="canvas" class="canvas-div">Your browser doesn't support canvas </canvas>
         </div>
-       <form id="frml">
-            Nick: <input type="text" name="nickName">
-            <input type="button" onclick="changeName()" value="Submit">
-       </form>
+       <div class="nick-div">
+           NickName:<input type="text" id="nick" placeholder="Player">
+           <button type="submit" onclick="changeName()" >Submit</button>
+       </div>
         <!-- JS -->
         <script src="app.js"></script>
     </body>

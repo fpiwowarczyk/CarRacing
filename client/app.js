@@ -166,13 +166,20 @@ function nextAnimationFrame(){
 }
 
 function sendGameState(){ // MEssage struct gates 
-    var buffer = new ArrayBuffer(16);
+    var buffer = new ArrayBuffer(4*36);
     var bufferView = new DataView(buffer);
     bufferView.setInt16(1,c.checkPoint);
     bufferView.setInt16(5,gates.length);
     bufferView.setInt16(9,c.posX);
     bufferView.setInt16(13,c.posY);
-    console.log(buffer);
+    for(let i =1;i<32;i++){
+        if(i-1<c.nick.length){
+            bufferView.setInt16(13+4*i,c.nick[i-1].charCodeAt(0));
+        } else {
+            bufferView.setInt16(13+4*i,0);
+        }
+        
+    }
     websocket.send(buffer);
 }
 
@@ -199,8 +206,9 @@ function countDist(p1x,p1y,p2x,p2y){
 }
 
 function changeName(){
-    name=document.getElementById('frml').submit();
-    console.log(name);
+    name=document.getElementById('nick').value;
+    c.nick=name;
+    game();
 }
  //======CLASSES 
 
@@ -217,11 +225,15 @@ class Car {
         this.checkPoint=0;
         this.lap=0;
     }
-    drawCar(){ // Making a car from rectangles 
+
+    drawNick(){
         // Draw nick 
         ctx.fillStyle=this.color;
         ctx.font = "15px Arial";
         ctx.fillText(this.nick, this.posX-20, this.posY-20);
+    }
+    drawCar(){ // Making a car from rectangles 
+
         //Draw body
         this.drawRectangle(this.posX,this.posY,40,20,this.color);
 
@@ -282,6 +294,7 @@ class Car {
         }
         this.posX=this.posX+Math.pow(direction,2)*this.velocity*Math.cos(this.angle*Math.PI/180);
         this.posY=this.posY+Math.pow(direction,2)*this.velocity*Math.sin(this.angle*Math.PI/180);
+        this.drawNick();
         this.rotateCar(0);
     }
 
@@ -294,6 +307,7 @@ class Car {
         ctx.translate(-(this.posX+20),-(this.posY+10));
         this.drawCar(this.angle);
         ctx.restore();
+        this.drawNick();
     }
 
     drawRectangle(x,y,w,h,color){ // Own rectangle drawing i didnt have to do that but i made it during testing and stayed
@@ -418,7 +432,7 @@ class Gate {
         this.posX=posX;
         this.posY=posY;
         this.number=number;
-        this.visibility  = true;
+        this.visibility  = false;
         this.orientation=orientation;
         this.draw();
     }

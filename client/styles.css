@@ -144,9 +144,8 @@ canvas{
     background-color: rgba(0,0,100,0.1);
     display:block;
 }
-div.relative {
-  position: relative;
-  width: 400px;
-  height: 200px;
-  border: 3px solid #73AD21;
+.nick-div{
+  position:relative;
+  left:100px;
+  top:830px;
 }
