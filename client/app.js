@@ -5,7 +5,8 @@ var wsUri = "ws://localhost:8888/ws";
 
 var canvas=document.getElementById("canvas");
 var ctx=canvas.getContext("2d");
-
+var playersReady=false;
+var startGame=false;
 gates = [];
 const hex=['0','1','2','3','4','5','6','7','8','9',"A","B","C","D","E","F"];
 var map = {
@@ -124,16 +125,41 @@ function onOpen(e){
 function onClose(e){
     console.log("CONNECTION CLOSED");
 }
-
+/*
+*Tasks:
+*1. Waiting for 2 players 
+*2. Players are ready waiting for nicknames
+*3. Normal game 
+*
+*/
 function onMessage(e){
-    //console.log(e.data);
+    console.log(e.data);
     view = new Int16Array(e.data);
-    c.lap=view[0];
-    c.checkPoint=view[1];
-    c1.posX=view[2];
-    c1.posY=view[3];
-    c1.angle=view[4];
-    console.log(view);
+    if(view[0]===0){
+        playersReady=false;
+    } else if(view[0]===1){
+        playersReady=true;
+    } else if(view[0]===2){
+        c.posX=view[1];
+        c.posY=view[2];
+        c.angle=view[3];
+        c1.posX=view[4];
+        c1.posY=view[5];
+        c1.angle=view[6];
+        let nick='';
+        for(let i =7;i<view.length;i++){
+            nick=nick+String.fromCharCode(view[i]);
+        }
+        c1.nick=nick;
+        startGame=true;
+    }else if(view[0]===3){
+        c.lap=view[1];
+        c.checkPoint=view[2];
+        c1.posX=view[3];
+        c1.posY=view[4];
+        c1.angle=view[5];
+    }
+
 
     
 }
@@ -151,7 +177,7 @@ function nextAnimationFrame(){
         g.draw();
     });
     c1.rotateCar(0);
-    if(c.ready===true){
+    if(startGame==true){
         if(!map[87]&&!map[83])
         {
             c.rotateCar(0);
@@ -251,7 +277,7 @@ class Car {
     
     constructor (posX,posY,color){
         this.nick="Player";
-        this.ready = false;
+
         this.angle=0;
         this.posX=posX;
         this.posY=posY;
@@ -383,7 +409,7 @@ class World{
         for(let i =0;i<20;i++){
             this.drawTree(100*i,0);
         }
-        this.drawLap();
+        this.drawText();
         this.drawStart();
     }
     
@@ -404,15 +430,21 @@ class World{
         
     }
 
-    drawLap(){
+    drawText(){
         ctx.fillStyle="rgba(200,50,50,0.9)";
-        
-        if(c.ready==true){
+        if(startGame==true){
             ctx.font = "200px Arial";
             ctx.fillText("Lap:"+c.lap, 250, 450);
         } else {
-            ctx.font = "100px Arial";
-            ctx.fillText("Chose your nickname", 250, 450);
+            if(playersReady===true)
+            {
+                ctx.font = "100px Arial";
+                ctx.fillText("Chose your nickname", 250, 450);
+            } else if(playersReady===false){
+                ctx.font = "100px Arial";
+                ctx.fillText("Waiting for other player", 250, 450);
+            }
+
         }
 
     }
