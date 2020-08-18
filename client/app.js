@@ -6,7 +6,7 @@ var wsUri = "ws://localhost:8888/ws";
 var canvas=document.getElementById("canvas");
 var ctx=canvas.getContext("2d");
 
-
+gates = [];
 const hex=['0','1','2','3','4','5','6','7','8','9',"A","B","C","D","E","F"];
 var map = {
     87:false,//'w'
@@ -30,12 +30,14 @@ function init(){
     game();
     canvas.width=1600;
     canvas.height=800;
-    color=getRandomColor();
     
-    c = new Car(200,210,color);
-
+    //Spawn Players 
+    color=getRandomColor();
+    c1 = new Car(-300,110,color);
+    color=getRandomColor();
+    c = new Car(-2000,210,color);
+    // Write world 
     world = new World();
-    gates = [];
     for(let i =0;i<10;i++){
         gates.push(new Gate(400+100*i,150,i,'vert'));
     }
@@ -116,6 +118,7 @@ function game(){
 
 function onOpen(e){
     console.log("CONNECTED TO THE SERVER");
+    sendGameState(2);
 }
 
 function onClose(e){
@@ -123,10 +126,16 @@ function onClose(e){
 }
 
 function onMessage(e){
+    //console.log(e.data);
     view = new Int16Array(e.data);
     c.lap=view[0];
     c.checkPoint=view[1];
+    c1.posX=view[2];
+    c1.posY=view[3];
+    c1.angle=view[4];
     console.log(view);
+
+    
 }
 
 function onError(e){
@@ -141,46 +150,72 @@ function nextAnimationFrame(){
     gates.forEach(function(g) {
         g.draw();
     });
-    if(!map[87]&&!map[83])
-    {
-        c.rotateCar(0);
-        Move();
-    }else {
-        Move();
-    }
-    dist=0;
-    if(gates[c.checkPoint].orientation==='hor')
-    {
-        dist=countDist(c.posX,c.posY,gates[c.checkPoint].posX+50,gates[c.checkPoint].posY+2.5);
-        
+    c1.rotateCar(0);
+    if(c.ready===true){
+        if(!map[87]&&!map[83])
+        {
+            c.rotateCar(0);
+            Move();
+        }else {
+            Move();
+        }
+        dist=0;
+        if(gates[c.checkPoint].orientation==='hor')
+        {
+            dist=countDist(c.posX,c.posY,gates[c.checkPoint].posX+50,gates[c.checkPoint].posY+2.5);
+            
+        } else {
+            dist=countDist(c.posX,c.posY,gates[c.checkPoint].posX+2.5,gates[c.checkPoint].posY+50);
+        }
+        if(dist<80){
+            c.changeCheckPoint();
+        }
+        if(websocket.readyState===1){
+            sendGameState();
+        }
     } else {
-        dist=countDist(c.posX,c.posY,gates[c.checkPoint].posX+2.5,gates[c.checkPoint].posY+50);
+        c.rotateCar(0);
     }
-    if(dist<80){
-        c.changeCheckPoint();
-    }
-    if(websocket.readyState===1){
-        sendGameState();
-    }
+
 
 }
 
-function sendGameState(){ // MEssage struct gates 
-    var buffer = new ArrayBuffer(4*36);
-    var bufferView = new DataView(buffer);
-    bufferView.setInt16(1,c.checkPoint);
-    bufferView.setInt16(5,gates.length);
-    bufferView.setInt16(9,c.posX);
-    bufferView.setInt16(13,c.posY);
-    for(let i =1;i<32;i++){
-        if(i-1<c.nick.length){
-            bufferView.setInt16(13+4*i,c.nick[i-1].charCodeAt(0));
-        } else {
-            bufferView.setInt16(13+4*i,0);
+/*
+*Taska:
+*0. Send state of your game 
+*1. Ready message with nickname  
+*2. On open message to tell you witch player you are
+*/
+function sendGameState(task=0){ // Message struct gates 
+    if(task===0)
+    {
+        var buffer = new ArrayBuffer(4*4);
+        var bufferView = new DataView(buffer);
+        bufferView.setInt16(1,c.checkPoint);
+        bufferView.setInt16(5,c.angle);
+        bufferView.setInt16(9,c.posX);
+        bufferView.setInt16(13,c.posY);
+        websocket.send(buffer);
+    } else if(task===1){
+        var buffer = new ArrayBuffer(4*33);
+        var bufferView = new DataView(buffer);
+        bufferView.setInt16(1,1);
+        for(let i =1;i<32;i++){
+            if(i-1<c.nick.length){
+                bufferView.setInt16(1+4*i,c.nick[i-1].charCodeAt(0));
+            } else {
+                bufferView.setInt16(1+4*i,0);
+            }   
         }
-        
+        websocket.send(buffer);
     }
-    websocket.send(buffer);
+    else if(task===2){
+        var buffer = new ArrayBuffer(4);
+        var bufferView = new DataView(buffer);
+        bufferView.setInt16(1,1);
+        websocket.send(buffer);
+    }
+
 }
 
 //=========== UTILS
@@ -208,7 +243,7 @@ function countDist(p1x,p1y,p2x,p2y){
 function changeName(){
     name=document.getElementById('nick').value;
     c.nick=name;
-    game();
+    sendGameState(1);
 }
  //======CLASSES 
 
@@ -216,6 +251,7 @@ class Car {
     
     constructor (posX,posY,color){
         this.nick="Player";
+        this.ready = false;
         this.angle=0;
         this.posX=posX;
         this.posY=posY;
@@ -370,8 +406,15 @@ class World{
 
     drawLap(){
         ctx.fillStyle="rgba(200,50,50,0.9)";
-        ctx.font = "200px Arial";
-        ctx.fillText("Lap:"+c.lap, 250, 450);
+        
+        if(c.ready==true){
+            ctx.font = "200px Arial";
+            ctx.fillText("Lap:"+c.lap, 250, 450);
+        } else {
+            ctx.font = "100px Arial";
+            ctx.fillText("Chose your nickname", 250, 450);
+        }
+
     }
     drawTree(x,y){
 
