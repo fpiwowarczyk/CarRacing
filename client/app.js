@@ -139,6 +139,8 @@ function onMessage(e){
     } else if(view[0]===1){
         playersReady=true;
     } else if(view[0]===2){
+        console.log(view.length);
+        console.log(view);
         c.posX=view[1];
         c.posY=view[2];
         c.angle=view[3];
@@ -146,9 +148,14 @@ function onMessage(e){
         c1.posY=view[5];
         c1.angle=view[6];
         let nick='';
-        for(let i =7;i<view.length;i++){
+        let color='';
+        for(let i=7;i<14;i++){
+            color=color+String.fromCharCode(view[i]);
+        }
+        for(let i =14;i<view.length;i++){
             nick=nick+String.fromCharCode(view[i]);
         }
+        c1.color=color;
         c1.nick=nick;
         startGame=true;
     }else if(view[0]===3){

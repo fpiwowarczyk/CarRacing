@@ -69,41 +69,51 @@ class GameHandler(tornado.websocket.WebSocketHandler):
                 elif(self==P2.id):
                     P1.id.write_message(msg,True)
             elif(len(message)==160):
-                #-----------------Nick name of Player 
+                #-----------------Color of Player 
                 message=struct.unpack('hh'*40,message)
                 for n in message[2:16]:
                     if(n!= 0):
                         color=color+chr(n)
+                #-----------------Nick name of Player 
                 for n in message[16:]:
                     if(n!=0):
                         nick=nick+chr(n)
-                print(color)
-                print(nick)
                 if(P1.id==self):
+                    P1.color=color
                     P1.nick=nick
                     if(P1.nick!=None and P2.nick!= None):
                         Task=2
                         #---------- Message for Player 1 
                         message=struct.pack('hhhhhhh',Task,P1.posX,P1.posY,P1.angle,P2.posX,P2.posY,P2.angle)
-                        for n in range(0,len(P1.nick)):
-                            message=message+struct.pack('h',ord(P2.nick[n]))
-                        P1.id.write_message(message,True)
-                        #----------- Message for Player 2 
-                        message=struct.pack('hhhhhhh',Task,P2.posX,P2.posY,P2.angle,P1.posX,P1.posY,P1.angle)
+                        for n in range(0,len(P2.color)):
+                            message=message+struct.pack('h',ord(P2.color[n]))
                         for n in range(0,len(P2.nick)):
+                            message=message+struct.pack('h',ord(P2.nick[n]))
+                        print(message)
+                        P1.id.write_message(message,True)
+                        #----------- Message for Player 2 \
+                        message=struct.pack('hhhhhhh',Task,P2.posX,P2.posY,P2.angle,P1.posX,P1.posY,P1.angle)
+                        for n in range(0,len(P1.color)):
+                            message=message+struct.pack('h',ord(P1.color[n]))
+                        for n in range(0,len(P1.nick)):
                             message=message+struct.pack('h',ord(P1.nick[n]))
                         P2.id.write_message(message,True)
                 elif(P2.id==self):
+                    P2.color=color
                     P2.nick=nick
                     if(P1.nick!=None and P2.nick!= None):
                         Task=2
                         #---------- Message for Player 1 
                         message=struct.pack('hhhhhhh',Task,P1.posX,P1.posY,P1.angle,P2.posX,P2.posY,P2.angle)
+                        for n in range(0,len(P2.color)):
+                            message=message+struct.pack('h',ord(P2.color[n]))
                         for n in range(0,len(P2.nick)):
                             message=message+struct.pack('h',ord(P2.nick[n]))
                         P1.id.write_message(message,True)
-                        #----------- Message for Player 2 
+                        #----------- Message for Player 2 \
                         message=struct.pack('hhhhhhh',Task,P2.posX,P2.posY,P2.angle,P1.posX,P1.posY,P1.angle)
+                        for n in range(0,len(P1.color)):
+                            message=message+struct.pack('h',ord(P1.color[n]))
                         for n in range(0,len(P1.nick)):
                             message=message+struct.pack('h',ord(P1.nick[n]))
                         P2.id.write_message(message,True)
