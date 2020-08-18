@@ -133,7 +133,6 @@ function onClose(e){
 *
 */
 function onMessage(e){
-    console.log(e.data);
     view = new Int16Array(e.data);
     if(view[0]===0){
         playersReady=false;
@@ -223,16 +222,20 @@ function sendGameState(task=0){ // Message struct gates
         bufferView.setInt16(13,c.posY);
         websocket.send(buffer);
     } else if(task===1){
-        var buffer = new ArrayBuffer(4*33);
+        var buffer = new ArrayBuffer(4*40);
         var bufferView = new DataView(buffer);
         bufferView.setInt16(1,1);
+        for(let i =1;i<8;i++){
+            bufferView.setInt16(1+4*i,c.color[i-1].charCodeAt(0));
+        }
         for(let i =1;i<32;i++){
             if(i-1<c.nick.length){
-                bufferView.setInt16(1+4*i,c.nick[i-1].charCodeAt(0));
+                bufferView.setInt16(33+4*i,c.nick[i-1].charCodeAt(0));
             } else {
-                bufferView.setInt16(1+4*i,0);
+                bufferView.setInt16(33+4*i,0);
             }   
         }
+        console.log(buffer);
         websocket.send(buffer);
     }
     else if(task===2){
@@ -271,6 +274,8 @@ function changeName(){
     c.nick=name;
     sendGameState(1);
 }
+
+
  //======CLASSES 
 
 class Car {
@@ -432,19 +437,15 @@ class World{
 
     drawText(){
         ctx.fillStyle="rgba(200,50,50,0.9)";
-        if(startGame==true){
+        if(startGame===true&&playersReady===true){
             ctx.font = "200px Arial";
             ctx.fillText("Lap:"+c.lap, 250, 450);
-        } else {
-            if(playersReady===true)
-            {
-                ctx.font = "100px Arial";
-                ctx.fillText("Chose your nickname", 250, 450);
-            } else if(playersReady===false){
-                ctx.font = "100px Arial";
-                ctx.fillText("Waiting for other player", 250, 450);
-            }
-
+        } else if(startGame===false&&playersReady===true) {
+            ctx.font = "100px Arial";
+            ctx.fillText("Chose your nickname", 250, 450);
+        }else if(startGame===false&&playersReady===false){
+            ctx.font = "100px Arial";
+            ctx.fillText("Waiting for other player", 250, 450);
         }
 
     }
