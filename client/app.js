@@ -7,6 +7,8 @@ var canvas=document.getElementById("canvas");
 var ctx=canvas.getContext("2d");
 var playersReady=false;
 var startGame=false;
+var gameOver=false;
+var winner=0;
 gates = [];
 const hex=['0','1','2','3','4','5','6','7','8','9',"A","B","C","D","E","F"];
 var map = {
@@ -130,7 +132,7 @@ function onClose(e){
 *1. Waiting for 2 players 
 *2. Players are ready waiting for nicknames
 *3. Normal game 
-*
+*4. Winner 
 */
 function onMessage(e){
     view = new Int16Array(e.data);
@@ -139,8 +141,6 @@ function onMessage(e){
     } else if(view[0]===1){
         playersReady=true;
     } else if(view[0]===2){
-        console.log(view.length);
-        console.log(view);
         c.posX=view[1];
         c.posY=view[2];
         c.angle=view[3];
@@ -160,10 +160,14 @@ function onMessage(e){
         startGame=true;
     }else if(view[0]===3){
         c.lap=view[1];
-        c.checkPoint=view[2];
-        c1.posX=view[3];
-        c1.posY=view[4];
-        c1.angle=view[5];
+        c1.lap=view[2];
+        c.checkPoint=view[3];
+        c1.posX=view[4];
+        c1.posY=view[5];
+        c1.angle=view[6];
+    }else if(view[0]==4){
+        winner=view[1];
+        gameOver=true;
     }
 
 
@@ -282,7 +286,18 @@ function changeName(){
     sendGameState(1);
 }
 
+function resetGame(){
+    playersReady=false;
+    startGame=false;
+    gameOver=false;
 
+    //Spawn Players 
+    color=getRandomColor();
+    c1 = new Car(-300,110,color);
+    color=getRandomColor();
+    c = new Car(-2000,210,color);
+    game();
+}
  //======CLASSES 
 
 class Car {
@@ -429,30 +444,43 @@ class World{
         
         for(let i =0;i<5;i+=2){
             ctx.fillStyle='black';
-            ctx.fillRect(200,230-20*i,20,20);
+            ctx.fillRect(320,230-20*i,20,20);
             ctx.fillStyle='white'
-            ctx.fillRect(220,230-20*i,20,20)
+            ctx.fillRect(340,230-20*i,20,20)
         }
         for(let i =1;i<5;i+=2){
             ctx.fillStyle='black';
-            ctx.fillRect(220,230-20*i,20,20);
+            ctx.fillRect(340,230-20*i,20,20);
             ctx.fillStyle='white'
-            ctx.fillRect(200,230-20*i,20,20);
+            ctx.fillRect(320,230-20*i,20,20);
         }
         
     }
 
     drawText(){
         ctx.fillStyle="rgba(200,50,50,0.9)";
-        if(startGame===true&&playersReady===true){
-            ctx.font = "200px Arial";
-            ctx.fillText("Lap:"+c.lap, 250, 450);
-        } else if(startGame===false&&playersReady===true) {
+        if(gameOver==false){
+            if(startGame===true&&playersReady===true){
+                ctx.font = "100px Arial";
+                ctx.fillText(c.nick+" Lap:"+c.lap, 250, 350);
+                ctx.fillStyle="rgba(36,21,250,0.9)";
+                ctx.fillText(c1.nick+" Lap:"+c1.lap, 250, 500);
+            } else if(startGame===false&&playersReady===true) {
+                ctx.font = "100px Arial";
+                ctx.fillText("Chose your nickname", 250, 450);
+            }else if(startGame===false&&playersReady===false){
+                ctx.font = "100px Arial";
+                ctx.fillText("Waiting for other player", 250, 450);
+            }
+        }else if(gameOver==true){
+            startGame=false;
             ctx.font = "100px Arial";
-            ctx.fillText("Chose your nickname", 250, 450);
-        }else if(startGame===false&&playersReady===false){
-            ctx.font = "100px Arial";
-            ctx.fillText("Waiting for other player", 250, 450);
+            if(winner==1){
+                ctx.fillText("GameOver! Winner:"+c.nick, 250, 450);
+            } else if(winner==2){
+                ctx.fillText("GameOver! Winner:"+c1.nick, 250, 450);
+            }
+            resetGame();
         }
 
     }
