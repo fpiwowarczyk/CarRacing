@@ -246,7 +246,6 @@ function sendGameState(task=0){ // Message struct gates
                 bufferView.setInt16(33+4*i,0);
             }   
         }
-        console.log(buffer);
         websocket.send(buffer);
     }
     else if(task===2){
@@ -286,18 +285,6 @@ function changeName(){
     sendGameState(1);
 }
 
-function resetGame(){
-    playersReady=false;
-    startGame=false;
-    gameOver=false;
-
-    //Spawn Players 
-    color=getRandomColor();
-    c1 = new Car(-300,110,color);
-    color=getRandomColor();
-    c = new Car(-2000,210,color);
-    game();
-}
  //======CLASSES 
 
 class Car {
@@ -469,8 +456,8 @@ class World{
                 ctx.font = "100px Arial";
                 ctx.fillText("Chose your nickname", 250, 450);
             }else if(startGame===false&&playersReady===false){
-                ctx.font = "100px Arial";
-                ctx.fillText("Waiting for other player", 250, 450);
+                ctx.font = "70px Arial";
+                ctx.fillText("Waiting for other player", 240, 450);
             }
         }else if(gameOver==true){
             startGame=false;
@@ -480,7 +467,6 @@ class World{
             } else if(winner==2){
                 ctx.fillText("GameOver! Winner:"+c1.nick, 250, 450);
             }
-            resetGame();
         }
 
     }
