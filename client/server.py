@@ -50,7 +50,7 @@ class GameHandler(tornado.websocket.WebSocketHandler):
         if isinstance(message,bytes):
             for Game in Games:
                 if((playersPresent(self,Game)) and GameNotWaiting(Game)):
-                    if(len(message)==16): #-------------- Send position to other player 
+                    if(len(message)==16):
                         if(self==Game.P1.id):
                             Task=3
                             Game.P1 = unpackMessage(message,Game.P1)
@@ -59,8 +59,7 @@ class GameHandler(tornado.websocket.WebSocketHandler):
                             if(Game.P1.Laps>=3):
                                 setWinner(self,message,Game)
                             else:
-                                msg = struct.pack('h'*7,Task,Game.P2.Laps,Game.P1.Laps,Game.P2.gate,Game.P1.posX,Game.P1.posY,Game.P1.angle)
-                                Game.P2.id.write_message(msg,True)
+                                sendStateToPlayers(Task,Game.P1,Game.P2)
                         elif(self==Game.P2.id):
                             Task=3
                             Game.P2 = unpackMessage(message,Game.P2)
@@ -69,31 +68,15 @@ class GameHandler(tornado.websocket.WebSocketHandler):
                             if(Game.P2.Laps>=3):
                                 setWinner(self,message,Game)
                             else:
-                                msg = struct.pack('h'*7,Task,Game.P1.Laps,Game.P2.Laps,Game.P1.gate,Game.P2.posX,Game.P2.posY,Game.P2.angle)
-                                Game.P1.id.write_message(msg,True)
-                    elif(len(message)==160):
-                        #-----------------Color of Player 
+                                sendStateToPlayers(Task,Game.P2,Game.P1)
+                    elif(len(message)==160): # Take info about colors and nicknames and broadcast them 
                         message=struct.unpack('h'*80,message)
-                        for n in message[2:16]:
-                            if(n!= 0):
-                                color=color+chr(n)
-                        #-----------------Nick name of Player 
-                        for n in message[16:]:
-                            if(n!=0):
-                                nick=nick+chr(n)
+                        color = unpackColor(message)
+                        nick = unpackNickName(message)
                         if(Game.P1.id==self):
-                            Game.P1.color=color
-                            Game.P1.nick=nick
-                            if(Game.P1.nick!=None and Game.P2.nick!= None):  
-                                Task=2
-                                setNickNames(self,Task,Game)
+                            broadcastSetup(self,Game,1)
                         elif(Game.P2.id==self):
-                            Game.P2.color=color
-                            Game.P2.nick=nick
-                            if(Game.P1.nick!=None and Game.P2.nick!= None):
-                                Task=2
-                                setNickNames(self,Task,Game)
-
+                            broadcastSetup(self,Game,2)
                         nick=''
                         color=''
                     break   
@@ -151,7 +134,9 @@ def setWinner(self,message,Game):
     msg=struct.pack('h'*2,Task,Winner)
     Game.P1.id.write_message(msg,True)
 
-    
+def sendStateToPlayers(Task,Player,OtherPlayer):
+    msg = struct.pack('h'*7,Task,OtherPlayer.Laps,Player.Laps,OtherPlayer.gate,Player.posX,Player.posY,Player.angle)
+    OtherPlayer.id.write_message(msg,True)
 
 def unpackMessage(message,Player):
     message=struct.unpack('h'*8,message)
@@ -173,6 +158,35 @@ def updatePlayerProgress(Player,gates):
         Player.gate=0
         Player.Laps=Player.Laps+1
     return Player
+
+def unpackColor(message):
+    color=''
+    for n in message[2:16]:
+        if(n!= 0):
+            color=color+chr(n)
+    return color
+
+def unpackNickName(message):
+    nick =''
+    for n in message[16:]:
+        if(n!=0):
+            nick=nick+chr(n)
+    return nick
+  
+def broadcastSetup(self,Game,Player):
+    Task=2
+    if(Player==1):
+        Game.P1.color=color
+        Game.P1.nick=nick
+    elif(Player==2):
+        Game.P2.color=color
+        Game.P2.nick=nick
+    if(Game.P1.nick!=None and Game.P2.nick!= None):  
+        Task=2
+        setNickNames(self,Task,Game)
+
+
+
 
 class Loader(tornado.web.RequestHandler):
     def get(self):
